@@ -26,8 +26,7 @@ Run `/quiz` at any time to quiz yourself on your current uncommitted changes.
 
 ## Installation
 
-```bash
-claude plugin install /path/to/code-quiz-plugin
-# or, once published:
-claude plugin install github:oguzcan-yavuz/code-quiz-plugin
+```
+/plugin marketplace add oguzcan-yavuz/code-quiz-plugin
+/plugin install code-quiz
 ```
