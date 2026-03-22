@@ -37,6 +37,7 @@ run_test() {
   fi
 
   local payload="${payload_template/TRANSCRIPT_PLACEHOLDER/$transcript}"
+  payload="${payload/CWD_PLACEHOLDER/$tmpdir}"
   local output exit_code=0
   output=$(echo "$payload" | bash "$HOOK_SCRIPT" 2>/dev/null) || exit_code=$?
 
@@ -111,6 +112,7 @@ run_test_with_saved_head() {
   fi
 
   local payload="${payload_template/TRANSCRIPT_PLACEHOLDER/$transcript}"
+  payload="${payload/CWD_PLACEHOLDER/$tmpdir}"
   local output exit_code=0
   output=$(echo "$payload" | bash "$HOOK_SCRIPT" 2>/dev/null) || exit_code=$?
 
@@ -142,8 +144,8 @@ run_test_with_saved_head() {
   fi
 }
 
-NORMAL='{"session_id":"t","transcript_path":"TRANSCRIPT_PLACEHOLDER","cwd":"/tmp","permission_mode":"default","hook_event_name":"Stop","stop_hook_active":false}'
-REENTRY='{"session_id":"t","transcript_path":"TRANSCRIPT_PLACEHOLDER","cwd":"/tmp","permission_mode":"default","hook_event_name":"Stop","stop_hook_active":true}'
+NORMAL='{"session_id":"t","transcript_path":"TRANSCRIPT_PLACEHOLDER","cwd":"CWD_PLACEHOLDER","permission_mode":"default","hook_event_name":"Stop","stop_hook_active":false}'
+REENTRY='{"session_id":"t","transcript_path":"TRANSCRIPT_PLACEHOLDER","cwd":"CWD_PLACEHOLDER","permission_mode":"default","hook_event_name":"Stop","stop_hook_active":true}'
 
 echo "=== code-quiz stop hook tests ==="
 echo ""
