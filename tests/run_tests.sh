@@ -9,13 +9,15 @@ FAIL=0
 
 # Helper: run hook in an isolated temp git repo
 # $1 = test name, $2 = payload template, $3 = transcript path,
-# $4 = expected ("exit0" or "block"), $5 = file to dirty (optional)
+# $4 = expected ("exit0" or "block"), $5 = file to dirty (optional),
+# $6 = stage the dirty file ("true"/"false", optional, default "true")
 run_test() {
   local name="$1"
   local payload_template="$2"
   local transcript="$3"
   local expected="$4"
   local dirty_file="${5:-}"
+  local stage_dirty="${6:-true}"
 
   local tmpdir
   tmpdir=$(mktemp -d)
@@ -29,7 +31,9 @@ run_test() {
   # Produce a non-empty diff if a file name was supplied
   if [ -n "$dirty_file" ]; then
     echo "changed" > "$dirty_file"
-    git add "$dirty_file"
+    if [ "$stage_dirty" = "true" ]; then
+      git add "$dirty_file"
+    fi
   fi
 
   local payload="${payload_template/TRANSCRIPT_PLACEHOLDER/$transcript}"
@@ -167,6 +171,12 @@ run_test_with_saved_head "New commits AND uncommitted changes triggers quiz" \
 
 run_test_with_saved_head "Saved HEAD unchanged, no Edit/Write: no quiz" \
   "$NORMAL" "$FIXTURES_DIR/transcript_no_edit.jsonl" "exit0" "false"
+
+run_test "Edit in intermediate message (deferred) + changes triggers quiz" \
+  "$NORMAL" "$FIXTURES_DIR/transcript_with_deferred_edit.jsonl" "block" "test.js"
+
+run_test "Write tool + untracked new file (not staged) triggers quiz" \
+  "$NORMAL" "$FIXTURES_DIR/transcript_with_write.jsonl" "block" "newfile.js" "false"
 
 run_test "Edit tool + only .md changes: no quiz" \
   "$NORMAL" "$FIXTURES_DIR/transcript_with_edit.jsonl" "exit0" "test.md"

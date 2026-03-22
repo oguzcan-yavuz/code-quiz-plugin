@@ -45,8 +45,8 @@ fi
 # If HEAD changed, new commits prove code was written (possibly by subagents).
 if [ "$HEAD_CHANGED" != "true" ]; then
   HAS_CODE_EDIT=$(jq -rsc '
-    [ .[] | select(.role == "assistant") ] | last // {} |
-    .content // [] |
+    [ .[] | select(.role == "assistant") ] |
+    map(.content // []) | add // [] |
     map(select(.type == "tool_use" and (.name == "Edit" or .name == "Write"))) |
     length > 0
   ' "$TRANSCRIPT_PATH" 2>/dev/null || echo "false")
@@ -73,6 +73,11 @@ ${UNCOMMITTED_DIFF}"
   fi
 else
   DIFF=$(git diff HEAD -- "${DOC_EXCLUDES[@]}" 2>/dev/null || echo "")
+  # Also capture newly-created untracked files (Write tool creates these)
+  while IFS= read -r f; do
+    [[ "$f" =~ \.(md|txt|rst)$ ]] && continue
+    DIFF+=$(git diff --no-index /dev/null "$f" 2>/dev/null || true)
+  done < <(git ls-files --others --exclude-standard 2>/dev/null || true)
 fi
 
 if [ -z "$DIFF" ]; then
