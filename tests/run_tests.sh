@@ -36,8 +36,12 @@ run_test() {
   local output exit_code=0
   output=$(echo "$payload" | bash "$HOOK_SCRIPT" 2>/dev/null) || exit_code=$?
 
+  local key
+  key=$(echo -n "$tmpdir" | shasum | cut -c1-16)
+
   popd > /dev/null
   rm -rf "$tmpdir"
+  rm -f "/tmp/code-quiz-diff-${key}"
 
   if [ "$expected" = "exit0" ]; then
     if [ "$exit_code" -eq 0 ] && [ -z "$output" ]; then
@@ -109,6 +113,7 @@ run_test_with_saved_head() {
   popd > /dev/null
   rm -rf "$tmpdir"
   rm -f "$hash_file"
+  rm -f "/tmp/code-quiz-diff-${key}"
 
   if [ "$expected" = "exit0" ]; then
     if [ "$exit_code" -eq 0 ] && [ -z "$output" ]; then
