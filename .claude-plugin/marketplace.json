@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "code-quiz-plugin",
+  "owner": {
+    "name": "oguzcan-yavuz"
+  },
+  "plugins": [
+    {
+      "name": "code-quiz",
+      "description": "Quizzes the developer after AI-assisted code changes to reinforce comprehension. Uses a Stop hook to detect edits and immediately starts a conversational quiz.",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/oguzcan-yavuz/code-quiz-plugin.git"
+      },
+      "author": {
+        "name": "oguzcan-yavuz"
+      },
+      "keywords": ["comprehension", "quiz", "learning", "tdd", "ai-assisted"]
+    }
+  ]
+}
