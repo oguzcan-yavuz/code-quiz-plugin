@@ -56,9 +56,11 @@ if [ "$HEAD_CHANGED" != "true" ]; then
 fi
 
 # Build the diff
+DOC_EXCLUDES=(':!*.md' ':!*.txt' ':!*.rst')
+
 if [ "$HEAD_CHANGED" = "true" ]; then
-  COMMITTED_DIFF=$(git diff "${SAVED_HEAD}..${CURRENT_HEAD}" 2>/dev/null || echo "")
-  UNCOMMITTED_DIFF=$(git diff HEAD 2>/dev/null || echo "")
+  COMMITTED_DIFF=$(git diff "${SAVED_HEAD}..${CURRENT_HEAD}" -- "${DOC_EXCLUDES[@]}" 2>/dev/null || echo "")
+  UNCOMMITTED_DIFF=$(git diff HEAD -- "${DOC_EXCLUDES[@]}" 2>/dev/null || echo "")
 
   if [ -n "$COMMITTED_DIFF" ] && [ -n "$UNCOMMITTED_DIFF" ]; then
     DIFF="${COMMITTED_DIFF}
@@ -69,7 +71,7 @@ ${UNCOMMITTED_DIFF}"
     DIFF="$UNCOMMITTED_DIFF"
   fi
 else
-  DIFF=$(git diff HEAD 2>/dev/null || echo "")
+  DIFF=$(git diff HEAD -- "${DOC_EXCLUDES[@]}" 2>/dev/null || echo "")
 fi
 
 if [ -z "$DIFF" ]; then

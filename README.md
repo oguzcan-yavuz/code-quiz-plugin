@@ -26,6 +26,7 @@ After Claude edits or creates files, a Stop hook detects the changes and immedia
    - If new commits exist, it diffs from the saved HEAD to the current HEAD
    - If no new commits, it diffs uncommitted changes against HEAD
    - Both committed and uncommitted changes are included if present
+   - Documentation files (`.md`, `.txt`, `.rst`) are excluded from the diff — only code changes trigger the quiz
 4. Claude immediately conducts a quiz using the diff and conversation history
 5. At the end, Claude gives a brief summary of what was understood well and what's worth revisiting
 

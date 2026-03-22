@@ -66,6 +66,7 @@ run_test() {
 # $1 = test name, $2 = payload template, $3 = transcript path,
 # $4 = expected ("exit0" or "block"), $5 = make new commits ("true"/"false"),
 # $6 = leave uncommitted changes ("true"/"false", optional, default false)
+# $7 = committed filename (optional, default "newfile.js")
 run_test_with_saved_head() {
   local name="$1"
   local payload_template="$2"
@@ -73,6 +74,7 @@ run_test_with_saved_head() {
   local expected="$4"
   local make_new_commits="${5:-false}"
   local dirty="${6:-false}"
+  local committed_file="${7:-newfile.js}"
 
   local tmpdir
   tmpdir=$(mktemp -d)
@@ -90,9 +92,9 @@ run_test_with_saved_head() {
   git rev-parse HEAD > "$hash_file"
 
   if [ "$make_new_commits" = "true" ]; then
-    echo "changed" > newfile.js
-    git add newfile.js
-    git commit -q -m "add newfile"
+    echo "changed" > "$committed_file"
+    git add "$committed_file"
+    git commit -q -m "add $committed_file"
   fi
 
   if [ "$dirty" = "true" ]; then
@@ -160,6 +162,12 @@ run_test_with_saved_head "New commits AND uncommitted changes triggers quiz" \
 
 run_test_with_saved_head "Saved HEAD unchanged, no Edit/Write: no quiz" \
   "$NORMAL" "$FIXTURES_DIR/transcript_no_edit.jsonl" "exit0" "false"
+
+run_test "Edit tool + only .md changes: no quiz" \
+  "$NORMAL" "$FIXTURES_DIR/transcript_with_edit.jsonl" "exit0" "test.md"
+
+run_test_with_saved_head "New commits with only .md files: no quiz" \
+  "$NORMAL" "$FIXTURES_DIR/transcript_no_edit.jsonl" "exit0" "true" "false" "plan.md"
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
