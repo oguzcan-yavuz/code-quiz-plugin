@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Read the Stop hook payload from stdin
+INPUT=$(cat)
+
+# Guard: prevent infinite loop if hook already fired this continuation
+STOP_HOOK_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active')
+if [ "$STOP_HOOK_ACTIVE" = "true" ]; then
+  exit 0
+fi
+
+# Get transcript path and expand leading ~
+TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path')
+TRANSCRIPT_PATH="${TRANSCRIPT_PATH/#\~/$HOME}"
+
+if [ ! -f "$TRANSCRIPT_PATH" ]; then
+  exit 0
+fi
+
+# Check whether the last assistant turn used Edit or Write tools.
+# The transcript is a JSONL file: one JSON object per line, each with a "role" field.
+# We find the last assistant entry and scan its content array for tool_use blocks.
+HAS_CODE_EDIT=$(jq -rsc '
+  [ .[] | select(.role == "assistant") ] | last // {} |
+  .content // [] |
+  map(select(.type == "tool_use" and (.name == "Edit" or .name == "Write"))) |
+  length > 0
+' "$TRANSCRIPT_PATH" 2>/dev/null || echo "false")
+
+if [ "$HAS_CODE_EDIT" != "true" ]; then
+  exit 0
+fi
+
+# Get the full diff (staged + unstaged changes vs HEAD)
+DIFF=$(git diff HEAD 2>/dev/null || echo "")
+if [ -z "$DIFF" ]; then
+  exit 0
+fi
+
+# Count only +/- lines (excluding file header lines like +++ and ---)
+CHANGED_LINE_COUNT=$(echo "$DIFF" | grep -E '^[+-]' | grep -cvE '^(\+\+\+|---)' || echo "0")
+
+TRUNCATION_NOTICE=""
+if [ "$CHANGED_LINE_COUNT" -gt 500 ]; then
+  # Keep only the first 500 changed lines using awk
+  DIFF=$(echo "$DIFF" | awk '
+    /^[+-]/ && !/^(\+\+\+|---)/ { count++ }
+    count <= 500 { print }
+  ')
+  TRUNCATION_NOTICE="
+[diff truncated at 500 changed lines — quiz covers visible changes only]"
+fi
+
+# Build the reason string and output decision:block.
+# jq handles all JSON escaping via --arg.
+REASON="Please run the /quiz skill now. The diff is pre-supplied below — do not run git diff again.
+
+DIFF:
+---
+${DIFF}${TRUNCATION_NOTICE}"
+
+jq -n --arg reason "$REASON" '{"decision": "block", "reason": $reason}'
