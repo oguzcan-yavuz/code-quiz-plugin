@@ -9,7 +9,7 @@ You are conducting a comprehension quiz. The goal is to help the developer under
 
 ## Step 1: Get the diff
 
-**If you were triggered automatically by the Stop hook:** the diff is pre-supplied in the instruction you received, after the `DIFF:\n---` marker. Use it directly. Do not run `git diff`.
+**If you were triggered automatically by the Stop hook:** the instruction you received includes a line like `Diff saved to: /tmp/code-quiz-diff-<key>`. Read that file using the Read tool to get the full diff. Do not run `git diff`.
 
 **If triggered manually via `/quiz`:** run `git diff HEAD` to get the current diff. If the output is empty, tell the user: "No uncommitted changes found. Run /quiz after making some changes." and stop.
 
