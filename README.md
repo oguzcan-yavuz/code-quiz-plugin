@@ -6,6 +6,18 @@ After Claude edits or creates files, a Stop hook detects the changes and immedia
 
 **You can skip at any time by typing `skip`.**
 
+## Requirements
+
+- `jq` must be installed and on your PATH (`brew install jq` on macOS)
+- Must be run inside a git repository
+
+## Installation
+
+```
+/plugin marketplace add oguzcan-yavuz/code-quiz-plugin
+/plugin install code-quiz
+```
+
 ## How it works
 
 1. Claude makes code changes (Edit or Write tool calls)
@@ -18,15 +30,3 @@ No score tracking. No enforcement. Changes are never reverted.
 ## Manual use
 
 Run `/quiz` at any time to quiz yourself on your current uncommitted changes.
-
-## Requirements
-
-- `jq` must be installed and on your PATH (`brew install jq` on macOS)
-- Must be run inside a git repository
-
-## Installation
-
-```
-/plugin marketplace add oguzcan-yavuz/code-quiz-plugin
-/plugin install code-quiz
-```
