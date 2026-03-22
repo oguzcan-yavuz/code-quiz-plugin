@@ -22,6 +22,7 @@ fi
 CWD=$(pwd)
 KEY=$(echo -n "$CWD" | shasum | cut -c1-16)
 HASH_FILE="/tmp/code-quiz-head-${KEY}"
+DIFF_FILE="/tmp/code-quiz-diff-${KEY}"
 
 CURRENT_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
 if [ -z "$CURRENT_HEAD" ]; then
@@ -92,12 +93,15 @@ if [ "$CHANGED_LINE_COUNT" -gt 500 ]; then
 [diff truncated at 500 changed lines — quiz covers visible changes only]"
 fi
 
+# Write diff to temp file so it doesn't flood the terminal
+echo "$DIFF" > "$DIFF_FILE"
+
 # Build the reason string and output decision:block.
 # jq handles all JSON escaping via --arg.
-REASON="Please run the /quiz skill now. The diff is pre-supplied below — do not run git diff again.
+REASON="Quiz triggered — ${CHANGED_LINE_COUNT} changed line(s). Please run the /quiz skill now.
 
-DIFF:
----
-${DIFF}${TRUNCATION_NOTICE}"
+Diff saved to: ${DIFF_FILE}${TRUNCATION_NOTICE}
+
+Do not run git diff — read the diff from the file path above."
 
 jq -n --arg reason "$REASON" '{"decision": "block", "reason": $reason}'

@@ -50,13 +50,13 @@ run_test() {
   elif [ "$expected" = "block" ]; then
     local decision
     decision=$(echo "$output" | jq -r '.decision' 2>/dev/null || echo "")
-    local has_diff_marker
-    has_diff_marker=$(echo "$output" | jq -r '.reason' 2>/dev/null | grep -c 'DIFF:' || echo "0")
-    if [ "$decision" = "block" ] && [ "$has_diff_marker" -gt 0 ]; then
+    local has_diff_file
+    has_diff_file=$(echo "$output" | jq -r '.reason' 2>/dev/null | grep -c '/tmp/code-quiz-diff-' || echo "0")
+    if [ "$decision" = "block" ] && [ "$has_diff_file" -gt 0 ]; then
       echo "PASS: $name"
       PASS=$((PASS + 1))
     else
-      echo "FAIL: $name (expected decision:block with DIFF: marker, got: $output)"
+      echo "FAIL: $name (expected decision:block with /tmp/code-quiz-diff- path, got: $output)"
       FAIL=$((FAIL + 1))
     fi
   fi
@@ -121,13 +121,13 @@ run_test_with_saved_head() {
   elif [ "$expected" = "block" ]; then
     local decision
     decision=$(echo "$output" | jq -r '.decision' 2>/dev/null || echo "")
-    local has_diff_marker
-    has_diff_marker=$(echo "$output" | jq -r '.reason' 2>/dev/null | grep -c 'DIFF:' || echo "0")
-    if [ "$decision" = "block" ] && [ "$has_diff_marker" -gt 0 ]; then
+    local has_diff_file
+    has_diff_file=$(echo "$output" | jq -r '.reason' 2>/dev/null | grep -c '/tmp/code-quiz-diff-' || echo "0")
+    if [ "$decision" = "block" ] && [ "$has_diff_file" -gt 0 ]; then
       echo "PASS: $name"
       PASS=$((PASS + 1))
     else
-      echo "FAIL: $name (expected decision:block with DIFF: marker, got: $output)"
+      echo "FAIL: $name (expected decision:block with /tmp/code-quiz-diff- path, got: $output)"
       FAIL=$((FAIL + 1))
     fi
   fi
