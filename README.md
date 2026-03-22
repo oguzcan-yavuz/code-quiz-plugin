@@ -2,7 +2,7 @@
 
 A Claude Code plugin that quizzes you on AI-assisted code changes to reinforce comprehension.
 
-After Claude edits or creates files, a Stop hook detects the changes and immediately starts a conversational quiz — no waiting for your next message. Claude generates questions scaled to the diff size, drawing on both the diff and the conversation context to ask about big picture, control flow, edge cases, and design tradeoffs.
+After Claude edits or creates files, a Stop hook detects the changes and immediately starts a conversational quiz. Claude generates questions scaled to the diff size, drawing on both the diff and the conversation context to ask about big picture, control flow, edge cases, and design tradeoffs.
 
 **You can skip at any time by typing `skip`.**
 
@@ -31,8 +31,6 @@ After Claude edits or creates files, a Stop hook detects the changes and immedia
 5. At the end, Claude gives a brief summary of what was understood well and what's worth revisiting
 
 This means the quiz works whether Claude edits files directly or delegates to subagents that commit (e.g. when using the superpowers plugin).
-
-No score tracking. No enforcement. Changes are never reverted.
 
 ## Manual use
 
