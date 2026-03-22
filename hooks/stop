@@ -44,23 +44,23 @@ if [ -f "$HASH_FILE" ]; then
   fi
 fi
 
-# Edit/Write guard: only needed when HEAD didn't change (direct edits in this session).
-# If HEAD changed, new commits prove code was written (possibly by subagents).
-if [ "$HEAD_CHANGED" != "true" ]; then
-  HAS_CODE_EDIT=$(jq -rsc '
-    [ .[] | select(.role == "assistant") ] |
-    map(.content // []) | add // [] |
-    map(select(.type == "tool_use" and (.name == "Edit" or .name == "Write"))) |
-    length > 0
-  ' "$TRANSCRIPT_PATH" 2>/dev/null || echo "false")
+# Build the diff
+DOC_EXCLUDES=(':!*.md' ':!*.txt' ':!*.rst')
 
-  if [ "$HAS_CODE_EDIT" != "true" ]; then
+# If HEAD hasn't changed, check for uncommitted changes (staged or untracked non-doc files).
+# If HEAD changed, new commits prove code was written — skip this guard.
+if [ "$HEAD_CHANGED" != "true" ]; then
+  UNCOMMITTED_COUNT=$(git -C "$CWD" diff HEAD -- "${DOC_EXCLUDES[@]}" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$UNCOMMITTED_COUNT" -eq 0 ]; then
+    while IFS= read -r f; do
+      [[ "$f" =~ \.(md|txt|rst)$ ]] && continue
+      UNCOMMITTED_COUNT=$((UNCOMMITTED_COUNT + 1))
+    done < <(git -C "$CWD" ls-files --others --exclude-standard 2>/dev/null || true)
+  fi
+  if [ "$UNCOMMITTED_COUNT" -eq 0 ]; then
     exit 0
   fi
 fi
-
-# Build the diff
-DOC_EXCLUDES=(':!*.md' ':!*.txt' ':!*.rst')
 
 if [ "$HEAD_CHANGED" = "true" ]; then
   COMMITTED_DIFF=$(git -C "$CWD" diff "${SAVED_HEAD}..${CURRENT_HEAD}" -- "${DOC_EXCLUDES[@]}" 2>/dev/null || echo "")

@@ -159,8 +159,11 @@ run_test "Edit tool + changes triggers quiz" \
 run_test "Write tool + changes triggers quiz" \
   "$NORMAL" "$FIXTURES_DIR/transcript_with_write.jsonl" "block" "test.js"
 
-run_test "No Edit/Write tools: no quiz" \
-  "$NORMAL" "$FIXTURES_DIR/transcript_no_edit.jsonl" "exit0" "test.js"
+run_test "No Edit/Write tools, no changes: no quiz" \
+  "$NORMAL" "$FIXTURES_DIR/transcript_no_edit.jsonl" "exit0"
+
+run_test "No Edit/Write tools, with uncommitted changes: triggers quiz" \
+  "$NORMAL" "$FIXTURES_DIR/transcript_no_edit.jsonl" "block" "test.js"
 
 run_test "Edit tool but empty diff: no quiz" \
   "$NORMAL" "$FIXTURES_DIR/transcript_with_edit.jsonl" "exit0"
