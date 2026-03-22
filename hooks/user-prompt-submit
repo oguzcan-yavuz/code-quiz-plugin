@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+INPUT=$(cat)
+CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
+
+if [ -z "$CWD" ]; then
+  CWD=$(pwd)
+fi
+
+# Keyed by project directory so each repo has its own saved HEAD
+KEY=$(echo -n "$CWD" | shasum | cut -c1-16)
+HASH_FILE="/tmp/code-quiz-head-${KEY}"
+
+# Save current HEAD (silently skip if not a git repo)
+git -C "$CWD" rev-parse HEAD > "$HASH_FILE" 2>/dev/null || true

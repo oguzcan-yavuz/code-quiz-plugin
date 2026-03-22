@@ -18,22 +18,60 @@ if [ ! -f "$TRANSCRIPT_PATH" ]; then
   exit 0
 fi
 
-# Check whether the last assistant turn used Edit or Write tools.
-# The transcript is a JSONL file: one JSON object per line, each with a "role" field.
-# We find the last assistant entry and scan its content array for tool_use blocks.
-HAS_CODE_EDIT=$(jq -rsc '
-  [ .[] | select(.role == "assistant") ] | last // {} |
-  .content // [] |
-  map(select(.type == "tool_use" and (.name == "Edit" or .name == "Write"))) |
-  length > 0
-' "$TRANSCRIPT_PATH" 2>/dev/null || echo "false")
+# Check whether HEAD has changed since the last user prompt
+CWD=$(pwd)
+KEY=$(echo -n "$CWD" | shasum | cut -c1-16)
+HASH_FILE="/tmp/code-quiz-head-${KEY}"
 
-if [ "$HAS_CODE_EDIT" != "true" ]; then
+CURRENT_HEAD=$(git rev-parse HEAD 2>/dev/null || echo "")
+if [ -z "$CURRENT_HEAD" ]; then
   exit 0
 fi
 
-# Get the full diff (staged + unstaged changes vs HEAD)
-DIFF=$(git diff HEAD 2>/dev/null || echo "")
+HEAD_CHANGED=false
+SAVED_HEAD=""
+if [ -f "$HASH_FILE" ]; then
+  SAVED_HEAD=$(cat "$HASH_FILE")
+  if [ -n "$SAVED_HEAD" ] && [ "$SAVED_HEAD" != "$CURRENT_HEAD" ]; then
+    # Verify saved hash still exists in repo (handles force pushes etc.)
+    if git cat-file -e "${SAVED_HEAD}^{commit}" 2>/dev/null; then
+      HEAD_CHANGED=true
+    fi
+  fi
+fi
+
+# Edit/Write guard: only needed when HEAD didn't change (direct edits in this session).
+# If HEAD changed, new commits prove code was written (possibly by subagents).
+if [ "$HEAD_CHANGED" != "true" ]; then
+  HAS_CODE_EDIT=$(jq -rsc '
+    [ .[] | select(.role == "assistant") ] | last // {} |
+    .content // [] |
+    map(select(.type == "tool_use" and (.name == "Edit" or .name == "Write"))) |
+    length > 0
+  ' "$TRANSCRIPT_PATH" 2>/dev/null || echo "false")
+
+  if [ "$HAS_CODE_EDIT" != "true" ]; then
+    exit 0
+  fi
+fi
+
+# Build the diff
+if [ "$HEAD_CHANGED" = "true" ]; then
+  COMMITTED_DIFF=$(git diff "${SAVED_HEAD}..${CURRENT_HEAD}" 2>/dev/null || echo "")
+  UNCOMMITTED_DIFF=$(git diff HEAD 2>/dev/null || echo "")
+
+  if [ -n "$COMMITTED_DIFF" ] && [ -n "$UNCOMMITTED_DIFF" ]; then
+    DIFF="${COMMITTED_DIFF}
+${UNCOMMITTED_DIFF}"
+  elif [ -n "$COMMITTED_DIFF" ]; then
+    DIFF="$COMMITTED_DIFF"
+  else
+    DIFF="$UNCOMMITTED_DIFF"
+  fi
+else
+  DIFF=$(git diff HEAD 2>/dev/null || echo "")
+fi
+
 if [ -z "$DIFF" ]; then
   exit 0
 fi
