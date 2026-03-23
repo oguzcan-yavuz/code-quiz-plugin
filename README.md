@@ -19,7 +19,8 @@ Run `/quiz` after making changes to start a conversational quiz. Claude generate
 
 ## How it works
 
-1. Make some code changes
+1. Make some code changes (commit them or leave them uncommitted)
 2. Run `/quiz`
-3. Claude quizzes you on the uncommitted changes — questions are scaled to diff size
+3. Claude quizzes you on all changes since the last quiz — committed, uncommitted, and untracked files — questions are scaled to diff size
 4. At the end, Claude gives a brief summary of what was understood well and what's worth revisiting
+5. The current HEAD is saved so the next `/quiz` only covers new changes
