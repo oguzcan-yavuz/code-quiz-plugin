@@ -1,6 +1,6 @@
 {
   "name": "code-quiz",
-  "description": "Quizzes the developer after AI-assisted code changes to reinforce comprehension. Uses a Stop hook to detect edits and immediately starts a conversational quiz.",
+  "description": "Quizzes the developer on code changes to reinforce comprehension. Run /quiz manually after making changes to start a conversational quiz.",
   "version": "1.0.0",
   "author": {
     "name": "oguzcan-yavuz"

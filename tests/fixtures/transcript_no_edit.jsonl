@@ -1,2 +1,0 @@
-{"role":"user","content":[{"type":"text","text":"Explain how the auth middleware works"}]}
-{"role":"assistant","content":[{"type":"text","text":"The auth middleware checks the session cookie..."}]}

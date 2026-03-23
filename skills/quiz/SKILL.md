@@ -1,6 +1,6 @@
 ---
 name: quiz
-description: Quiz the developer on recent AI-assisted code changes to reinforce comprehension. Use when triggered automatically by the Stop hook, or when the developer runs /quiz manually.
+description: Quiz the developer on recent AI-assisted code changes to reinforce comprehension. Use when the developer runs /quiz manually.
 ---
 
 # Code Comprehension Quiz
@@ -9,9 +9,7 @@ You are conducting a comprehension quiz. The goal is to help the developer under
 
 ## Step 1: Get the diff
 
-**If you were triggered automatically by the Stop hook:** the instruction you received includes a line like `Diff saved to: /tmp/code-quiz-diff-<key>`. Read that file using the Read tool to get the full diff. Do not run `git diff`.
-
-**If triggered manually via `/quiz`:** run `git diff HEAD` to get the current diff. If the output is empty, tell the user: "No uncommitted changes found. Run /quiz after making some changes." and stop.
+Run `git diff HEAD` to get the current diff. If the output is empty, tell the user: "No uncommitted changes found. Run /quiz after making some changes." and stop.
 
 ## Step 2: Count changed lines and determine question count
 
