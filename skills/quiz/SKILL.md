@@ -9,7 +9,7 @@ You are conducting a comprehension quiz. The goal is to help the developer under
 
 ## Step 1: Get the diff
 
-1. Run `git rev-parse --show-toplevel` to get the repo root. If this fails (not a git repo), skip state tracking and run `git diff HEAD` only — proceed with whatever that returns.
+1. Run `git rev-parse --show-toplevel` to get the repo root. If this fails (not a git repo), tell the user "No git repository found. /quiz requires a git repo." and stop.
 
 2. Read `~/.claude/code-quiz/state.json`. If the file does not exist or has no entry for this repo root, treat `lastQuizHead` as absent.
 
@@ -57,7 +57,7 @@ Before asking each question, mark its task as `in_progress` using TaskUpdate. Dr
 
 Ask the question. Wait for the answer. Evaluate conversationally ("Exactly — and worth noting that..." / "Close, but you missed..."). Then mark the task `completed` using TaskUpdate. Then move to the next question.
 
-If the user types **skip** at any point, mark the current task `completed`, mark all remaining question tasks `deleted` using TaskUpdate, say "No worries — quiz ended." Give the brief summary (Step 5) and stop.
+If the user types **skip** at any point, mark the current task `completed`, mark all remaining question tasks `deleted` using TaskUpdate, say "No worries — quiz ended." Give the brief summary (Step 5) then proceed to Step 6.
 
 ## Step 5: Comprehension summary
 
@@ -73,7 +73,8 @@ After delivering the comprehension summary — whether the quiz finished normall
 
 1. Run `mkdir -p ~/.claude/code-quiz` to ensure the directory exists.
 2. Read `~/.claude/code-quiz/state.json` if it exists; default to `{}` if missing or unreadable.
-3. Set the `lastQuizHead` field for this repo root: `state["<repoRoot>"] = { "lastQuizHead": "<output of git rev-parse HEAD>" }`.
-4. Write the updated JSON back to `~/.claude/code-quiz/state.json`.
+3. Run `git rev-parse HEAD` to get the current HEAD hash. Use the repo root obtained in Step 1.
+4. Set the `lastQuizHead` field: `state[repoRoot] = { "lastQuizHead": "<HEAD hash from step 3>" }`.
+5. Write the updated JSON back to `~/.claude/code-quiz/state.json`.
 
 This ensures the next `/quiz` run only covers changes made after this session.
