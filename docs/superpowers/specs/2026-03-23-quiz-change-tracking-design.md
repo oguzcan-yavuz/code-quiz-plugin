@@ -32,25 +32,27 @@ A JSON file at `~/.claude/code-quiz/state.json`, keyed by absolute repo root pat
 1. Get repo root: `git rev-parse --show-toplevel`
 2. Read `~/.claude/code-quiz/state.json` and look up the current repo root
 3. **If a saved hash exists:**
-   - `git diff <savedHash> HEAD` — committed changes since last quiz
-   - `git diff HEAD` — uncommitted staged/unstaged changes
-   - Untracked files: `git ls-files --others --exclude-standard`, read each file and format as a pseudo-diff
+   - Run `git diff <savedHash> HEAD` — committed changes since last quiz
+   - Run `git diff HEAD` — uncommitted staged/unstaged changes
+   - Run `git ls-files --others --exclude-standard` for untracked files; read each and format as a pseudo-diff (e.g. `+++ <filename>\n+ <line>` per line)
    - Concatenate all three as the working diff
-4. **If no saved hash (first run):** use `git diff HEAD` + untracked files only
-5. If the combined diff is empty, tell the user "No changes found since the last quiz." and stop
+   - Count `+`/`-` lines across the full concatenated diff for question-count purposes (Step 2)
+4. **If no saved hash (first run):** use `git diff HEAD` + untracked files (same untracked handling as above)
+5. If the combined diff is empty, tell the user "No changes found since the last quiz." and stop. For first run with no saved state, say "No uncommitted changes found. Run /quiz after making some changes."
 
-## State Update (end of quiz)
+## State Update (new Step 6 in the skill)
 
-After Step 5 (comprehension summary) completes — whether the quiz finishes normally or the user types `skip` — write the current HEAD to state:
+After the comprehension summary is delivered — whether the quiz finishes normally or the user types `skip` — perform the following as an explicit final step:
 
-```
-git rev-parse HEAD → write to ~/.claude/code-quiz/state.json[repoRoot].lastQuizHead
-```
+1. Run `mkdir -p ~/.claude/code-quiz` to ensure the directory exists
+2. Read `~/.claude/code-quiz/state.json` if it exists (default to `{}` if missing)
+3. Set `state[repoRoot].lastQuizHead = $(git rev-parse HEAD)`
+4. Write the updated object back to `~/.claude/code-quiz/state.json`
 
-This ensures the next quiz only covers new changes.
+This is always the last action before the skill exits, regardless of how the quiz ended.
 
 ## Edge Cases
 
-- **No git repo:** `git rev-parse --show-toplevel` fails — fall back to current behavior (no state tracking)
-- **Saved hash no longer exists** (e.g., after rebase/force-push): `git diff <hash> HEAD` will fail — fall back to `git diff HEAD` + untracked files and clear the stale entry
-- **First run:** no state file or no entry for this repo — use current behavior, no changes to messaging
+- **No git repo:** `git rev-parse --show-toplevel` fails — skip state tracking entirely, fall back to `git diff HEAD` only
+- **Saved hash no longer valid** (e.g., after rebase/force-push): `git diff <hash> HEAD` will fail — tell the user "Quiz state was reset (saved commit no longer exists, likely due to a rebase or force-push). Showing uncommitted changes only." then fall back to `git diff HEAD` + untracked files and clear the stale entry
+- **First run:** no state file or no entry for this repo — treat identically to the no-saved-hash path above
